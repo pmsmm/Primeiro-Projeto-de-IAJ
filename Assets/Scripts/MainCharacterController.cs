@@ -21,6 +21,9 @@ public class MainCharacterController : MonoBehaviour {
     private const float MAX_LOOK_AHEAD = 6.0f;
     private const float AVOID_MARGIN = 10.0f;
     private const float COLLISION_RADIUS = 3.0f;
+    private const float CHARACTER_SIZE = 3.0f;
+    private const int NUMBER_OF_SAMPLES = 5;
+    private const int RVO_WEIGHT = 5;
 
     public KeyCode stopKey = KeyCode.S;
     public KeyCode priorityKey = KeyCode.P;
@@ -109,6 +112,9 @@ public class MainCharacterController : MonoBehaviour {
             Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
             MaxSpeed = MAX_SPEED,
+            CharacterSize = CHARACTER_SIZE,
+            NumberOfSamples = NUMBER_OF_SAMPLES,
+            Weight = RVO_WEIGHT
         };
 
         this.priorityMovement.Movements.Add(patrolMovement);
