@@ -24,6 +24,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public float MaxSpeed { get; set; }
         public int NumberOfSamples { get; set; }
         public int Weight { get; set; }
+        private bool isStopped { get; set; }
         private int ObsStart { get; set; }
         protected List<Vector3> samples { get; set; }
         private const float TOLERANCE = 0.001f;
@@ -106,6 +107,20 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             //Shoudl start by converting the deridedOutput to velocity if it's acceleration
             MovementOutput desiredOutput = DesiredMovement.GetMovement();
             Vector3 desiredVelocity = Character.velocity + desiredOutput.linear;
+
+            if (desiredVelocity.magnitude <= TOLERANCE)
+            {
+                if (!isStopped)
+                {
+                    isStopped = true;
+                    base.Target.velocity = Vector3.zero;
+                }
+                return base.GetMovement();
+            }
+            else if (isStopped)
+            {
+                isStopped = false;
+            }
 
             //Trim the velocity if the desired one is bigger than the established max velocity
             if(desiredVelocity.magnitude > MaxSpeed)
