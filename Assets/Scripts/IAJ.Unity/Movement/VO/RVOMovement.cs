@@ -25,20 +25,25 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public int NumberOfSamples { get; set; }
         public int Weight { get; set; }
         protected List<Vector3> samples { get; set; }
+        private const float TOLERANCE = 0.001f;
         //create additional properties if necessary
 
         protected DynamicMovement.DynamicMovement DesiredMovement { get; set; }
 
-        public RVOMovement(DynamicMovement.DynamicMovement goalMovement, List<KinematicData> movingCharacters, List<StaticData> obstacles)
+        public RVOMovement(DynamicMovement.DynamicMovement goalMovement, List<KinematicData> movingCharacters, List<StaticData> obstacles, KinematicData character)
         {
             this.DesiredMovement = goalMovement;
             this.CharacterSize = 3f;
             this.NumberOfSamples = 5;
             this.Weight = 2;
+            this.IgnoreDistance = 5f;
+            this.Character = character;
             this.Characters = movingCharacters;
+            this.Characters.Remove(this.Character);
             this.Obstacles = obstacles;
             base.Target = new KinematicData();
             this.Output = new MovementOutput();
+            this.samples = new List<Vector3>();
             //initialize other properties if you think is relevant
         }
 
@@ -46,7 +51,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         {
             //Best sample should be zero if every sample sucks
             Vector3 bestSample = Vector3.zero;
-            float minimumPenalty = -1;
+            float minimumPenalty = -1f;
             //minimumPenalty deve ser calculado como o timetoclosest feito no DynamicAvoidCharacter;
 
             foreach (Vector3 sample in samples)
@@ -58,25 +63,15 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                 foreach(KinematicData b in Characters)
                 {
                     Vector3 deltaPos = b.Position - Character.Position;
-                    Vector3 deltaVel = b.velocity - Character.velocity;
-                    float deltaSpeed = deltaVel.magnitude;
-                    minimumPenalty = -Vector3.Dot(deltaPos, deltaVel) / (deltaSpeed * deltaSpeed);
 
                     if (deltaPos.magnitude > IgnoreDistance)
                         continue;
 
-                    Ray ray1 = new Ray(Character.Position, 2 * sample - Character.velocity - b.velocity);
-                    RaycastHit hit;
-                    //float TimeToCollision = Util.MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, 2 * sample - Character.velocity - b.velocity, b.Position, CharacterSize*2);
-                    float TimeToCollision = -1;
-                    if (Physics.Raycast(Character.Position, ray1.direction, out hit, IgnoreDistance))
-                    {
-                        TimeToCollision = (hit.distance - CharacterSize) / Character.velocity.magnitude;
-                    }
+                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, 2 * sample - Character.velocity - b.velocity, b.Position, CharacterSize);
 
-                    if (TimeToCollision > 0)
+                    if (TimeToCollision > TOLERANCE)
                         timePenalty = Weight / TimeToCollision;
-                    else if (TimeToCollision <= 0.001f)
+                    else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
                         timePenalty = minimumPenalty;
                     else
                         timePenalty = 0;
@@ -86,7 +81,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
                     float penalty = distancePenalty + maximumTimePenalty;
 
-                    if(penalty < minimumPenalty)
+                    if(minimumPenalty == -1f || penalty < minimumPenalty)
                     {
                         minimumPenalty = penalty;
                         bestSample = sample;
@@ -118,7 +113,15 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                 samples.Add(MathHelper.ConvertOrientationToVector(Random.Range(0, MathConstants.MATH_2PI)) * Random.Range(0, MaxSpeed));
             }
 
-            base.Target.velocity = getBestSample(desiredVelocity, samples);
+            Vector3 bestSample = getBestSample(desiredVelocity, samples);
+            if (bestSample != Vector3.zero)
+            {
+                base.Target.velocity = bestSample;
+            }
+            else
+            {
+                base.Target.velocity = desiredOutput.linear;
+            }
 
             return base.GetMovement();
         }

@@ -22,6 +22,7 @@ public class MainCharacterController : MonoBehaviour {
     private const float AVOID_MARGIN = 10.0f;
     private const float COLLISION_RADIUS = 3.0f;
     private const float CHARACTER_SIZE = 3.0f;
+    private const float IGNORE_DISTANCE = 15f;
     private const int NUMBER_OF_SAMPLES = 5;
     private const int RVO_WEIGHT = 5;
 
@@ -95,7 +96,8 @@ public class MainCharacterController : MonoBehaviour {
             }
         }
 
-        var targetPosition = this.character.KinematicData.Position + (Vector3.zero - this.character.KinematicData.Position) * 2;
+        //var targetPosition = this.character.KinematicData.Position + (Vector3.zero - this.character.KinematicData.Position) * 2;
+        var targetPosition = -this.character.KinematicData.Position;
 
         this.patrolMovement = new DynamicPatrol(this.character.KinematicData.Position, targetPosition)
         {
@@ -107,12 +109,13 @@ public class MainCharacterController : MonoBehaviour {
             DebugColor = Color.yellow
         };
 
-        this.rvoMovement = new RVOMovement(this.patrolMovement, characters.Select(c => c.KinematicData).ToList(), obstacles.Select(o => new StaticData(o.transform)).ToList())
+        this.rvoMovement = new RVOMovement(this.patrolMovement, characters.Select(c => c.KinematicData).ToList(), obstacles.Select(o => new StaticData(o.transform)).ToList(), this.character.KinematicData)
         {
-            Character = this.character.KinematicData,
+            //Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
             MaxSpeed = MAX_SPEED,
             CharacterSize = CHARACTER_SIZE,
+            IgnoreDistance = IGNORE_DISTANCE,
             NumberOfSamples = NUMBER_OF_SAMPLES,
             Weight = RVO_WEIGHT
         };
