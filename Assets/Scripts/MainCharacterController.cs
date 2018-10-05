@@ -23,7 +23,7 @@ public class MainCharacterController : MonoBehaviour {
     private const float COLLISION_RADIUS = 3.0f;
     private const float CHARACTER_SIZE = 3.0f;
     private const float IGNORE_DISTANCE = 15f;
-    private const int NUMBER_OF_SAMPLES = 15;
+    private const int NUMBER_OF_SAMPLES = 5;
     private const int RVO_WEIGHT = 10;
 
     public KeyCode stopKey = KeyCode.S;

@@ -24,6 +24,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public float MaxSpeed { get; set; }
         public int NumberOfSamples { get; set; }
         public int Weight { get; set; }
+        private int ObsStart { get; set; }
         protected List<Vector3> samples { get; set; }
         private const float TOLERANCE = 0.001f;
         //create additional properties if necessary
@@ -40,7 +41,8 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             this.Character = character;
             this.Characters = movingCharacters;
             this.Characters.Remove(this.Character);
-            this.Obstacles = obstacles;
+            this.ObsStart = this.Characters.Count;
+            this.Characters.AddRange(obstacles);
             base.Target = new KinematicData();
             this.Output = new MovementOutput();
             this.samples = new List<Vector3>();
@@ -52,60 +54,42 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             //Best sample should be zero if every sample sucks
             Vector3 bestSample = Vector3.zero;
             float minimumPenalty = Mathf.Infinity;
+            Vector3 charPos = Character.Position;
+            Vector3 charVel = Character.velocity;
+            float maximumTimePenalty = 0f;
+            float timePenalty = 0f;
 
             foreach (Vector3 sample in samples)
             {
                 float distancePenalty = (desiredVelocity - sample).magnitude;
-                float maximumTimePenalty = 0;
-                float timePenalty;
+                maximumTimePenalty = 0f;
+                Vector3 sample_charVel = 2 * sample - charVel;
 
-                foreach(KinematicData b in Characters)
+                int i;
+                for (i = 0; i < Characters.Count; i++)
                 {
-                    Vector3 deltaPos = b.Position - Character.Position;
+                    KinematicData b = Characters[i];
+                    Vector3 bPos = b.Position;
+                    bool isObstacle = i >= ObsStart;
 
-                    if (deltaPos.magnitude > IgnoreDistance)
+                    if ((bPos - charPos).magnitude > IgnoreDistance)
                         continue;
 
-                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, 2 * sample - Character.velocity - b.velocity, b.Position, CharacterSize);
+                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(charPos, sample_charVel - b.velocity, bPos, CharacterSize * (isObstacle ? 1.5f : 1f));
 
                     if (TimeToCollision > TOLERANCE)
-                        timePenalty = Weight / TimeToCollision;
+                        timePenalty = (Weight * (isObstacle ? 3f : 1f)) / TimeToCollision;
                     else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
                         timePenalty = Mathf.Infinity;
                     else
-                        timePenalty = 0;
+                        timePenalty = 0f;
 
                     if (timePenalty > maximumTimePenalty)
                         maximumTimePenalty = timePenalty;
 
                     float penalty = distancePenalty + maximumTimePenalty;
 
-                    if(penalty < minimumPenalty)
-                    {
-                        minimumPenalty = penalty;
-                        bestSample = sample;
-                    }
-                }
-                foreach (KinematicData b in Obstacles)
-                {
-                    Vector3 deltaPos = b.Position - Character.Position;
-
-                    if (deltaPos.magnitude > IgnoreDistance)
-                        continue;
-
-                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, 2 * sample - Character.velocity - b.velocity, b.Position, CharacterSize*1.5f);
-
-                    if (TimeToCollision > TOLERANCE)
-                        timePenalty = Weight*3 / TimeToCollision;
-                    else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
-                        timePenalty = Mathf.Infinity;
-                    else
-                        timePenalty = 0;
-
-                    if (timePenalty > maximumTimePenalty)
-                        maximumTimePenalty = timePenalty;
-
-                    float penalty = distancePenalty + maximumTimePenalty;
+                    if (penalty <= 0.1f) return sample;
 
                     if (penalty < minimumPenalty)
                     {
