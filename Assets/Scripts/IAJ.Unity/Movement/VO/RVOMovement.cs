@@ -58,6 +58,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             Vector3 charVel = Character.velocity;
             float maximumTimePenalty = 0f;
             float timePenalty = 0f;
+            int CharacterCount = Characters.Count;
 
             foreach (Vector3 sample in samples)
             {
@@ -65,8 +66,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                 maximumTimePenalty = 0f;
                 Vector3 sample_charVel = 2 * sample - charVel;
 
-                int i;
-                for (i = 0; i < Characters.Count; i++)
+                for (int i = 0; i < CharacterCount; i++)
                 {
                     KinematicData b = Characters[i];
                     Vector3 bPos = b.Position;
@@ -79,13 +79,12 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
                     if (TimeToCollision > TOLERANCE)
                         timePenalty = (Weight * (isObstacle ? 3f : 1f)) / TimeToCollision;
-                    else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
+                    else if (TimeToCollision >= 0f)
                         timePenalty = Mathf.Infinity;
                     else
                         timePenalty = 0f;
 
-                    if (timePenalty > maximumTimePenalty)
-                        maximumTimePenalty = timePenalty;
+                    maximumTimePenalty = timePenalty > maximumTimePenalty ? timePenalty : maximumTimePenalty;
 
                     float penalty = distancePenalty + maximumTimePenalty;
 
