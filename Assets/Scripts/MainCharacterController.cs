@@ -109,13 +109,10 @@ public class MainCharacterController : MonoBehaviour {
             DebugColor = Color.yellow
         };
 
-        List<KinematicData> chars = characters.Select(c => c.KinematicData).ToList();
         List<GameObject> obs = obstacles.ToList();
         List<KinematicData> obst = new List<KinematicData>();
-        foreach (GameObject ob in obs) {
-            obst.Add(new KinematicData(new StaticData(ob.transform)));
-        }
-        this.rvoMovement = new RVOMovement(this.patrolMovement, chars, obst, this.character.KinematicData)
+        obst.AddRange(obs.Select(c => new KinematicData(new StaticData(c.transform))).ToList());
+        this.rvoMovement = new RVOMovement(this.patrolMovement, characters.Select(c => c.KinematicData).ToList(), obst, this.character.KinematicData)
         {
             //Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
