@@ -18,7 +18,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         }
 
         protected List<KinematicData> Characters { get; set; }
-        protected List<StaticData> Obstacles { get; set; }
+        protected List<KinematicData> Obstacles { get; set; }
         public float CharacterSize { get; set; }
         public float IgnoreDistance { get; set; }
         public float MaxSpeed { get; set; }
@@ -30,7 +30,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
         protected DynamicMovement.DynamicMovement DesiredMovement { get; set; }
 
-        public RVOMovement(DynamicMovement.DynamicMovement goalMovement, List<KinematicData> movingCharacters, List<StaticData> obstacles, KinematicData character)
+        public RVOMovement(DynamicMovement.DynamicMovement goalMovement, List<KinematicData> movingCharacters, List<KinematicData> obstacles, KinematicData character)
         {
             this.DesiredMovement = goalMovement;
             this.CharacterSize = 3f;
@@ -51,8 +51,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         {
             //Best sample should be zero if every sample sucks
             Vector3 bestSample = Vector3.zero;
-            float minimumPenalty = -1f;
-            //minimumPenalty deve ser calculado como o timetoclosest feito no DynamicAvoidCharacter;
+            float minimumPenalty = Mathf.Infinity;
 
             foreach (Vector3 sample in samples)
             {
@@ -72,7 +71,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                     if (TimeToCollision > TOLERANCE)
                         timePenalty = Weight / TimeToCollision;
                     else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
-                        timePenalty = minimumPenalty;
+                        timePenalty = Mathf.Infinity;
                     else
                         timePenalty = 0;
 
@@ -81,7 +80,34 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
                     float penalty = distancePenalty + maximumTimePenalty;
 
-                    if(minimumPenalty == -1f || penalty < minimumPenalty)
+                    if(penalty < minimumPenalty)
+                    {
+                        minimumPenalty = penalty;
+                        bestSample = sample;
+                    }
+                }
+                foreach (KinematicData b in Obstacles)
+                {
+                    Vector3 deltaPos = b.Position - Character.Position;
+
+                    if (deltaPos.magnitude > IgnoreDistance)
+                        continue;
+
+                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(Character.Position, 2 * sample - Character.velocity - b.velocity, b.Position, CharacterSize*1.5f);
+
+                    if (TimeToCollision > TOLERANCE)
+                        timePenalty = Weight*3 / TimeToCollision;
+                    else if (TimeToCollision >= 0f && TimeToCollision <= TOLERANCE)
+                        timePenalty = Mathf.Infinity;
+                    else
+                        timePenalty = 0;
+
+                    if (timePenalty > maximumTimePenalty)
+                        maximumTimePenalty = timePenalty;
+
+                    float penalty = distancePenalty + maximumTimePenalty;
+
+                    if (penalty < minimumPenalty)
                     {
                         minimumPenalty = penalty;
                         bestSample = sample;
@@ -114,14 +140,8 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             }
 
             Vector3 bestSample = getBestSample(desiredVelocity, samples);
-            if (bestSample != Vector3.zero)
-            {
-                base.Target.velocity = bestSample;
-            }
-            else
-            {
-                base.Target.velocity = desiredOutput.linear;
-            }
+            base.Target.velocity = bestSample != Vector3.zero ? bestSample : desiredOutput.linear;
+            Debug.DrawLine(Character.Position, Character.Position + base.Target.velocity, Color.red);
 
             return base.GetMovement();
         }

@@ -36,7 +36,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
 
                 if (output != null)
                 {
-                    Debug.DrawRay(this.GameObject.transform.position, output.linear,this.Movement.DebugColor);
+                    //Debug.DrawRay(this.GameObject.transform.position, output.linear,this.Movement.DebugColor);
 
                     this.KinematicData.Integrate(output, this.Drag, Time.deltaTime);
                     this.KinematicData.SetOrientationFromVelocity();

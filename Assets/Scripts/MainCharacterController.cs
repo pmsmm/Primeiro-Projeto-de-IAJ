@@ -12,8 +12,8 @@ public class MainCharacterController : MonoBehaviour {
 
     public const float X_WORLD_SIZE = 55;
     public const float Z_WORLD_SIZE = 32.5f;
-    private const float MAX_ACCELERATION = 40.0f;
-    private const float MAX_SPEED = 20.0f;
+    private const float MAX_ACCELERATION = 25.0f;
+    private const float MAX_SPEED = 15.0f;
     private const float DRAG = 0.1f;
     private const float TIME_TO_TARGET = 2.0f;
     private const float SLOW_RADIUS = 10.0f;
@@ -23,8 +23,8 @@ public class MainCharacterController : MonoBehaviour {
     private const float COLLISION_RADIUS = 3.0f;
     private const float CHARACTER_SIZE = 3.0f;
     private const float IGNORE_DISTANCE = 15f;
-    private const int NUMBER_OF_SAMPLES = 5;
-    private const int RVO_WEIGHT = 5;
+    private const int NUMBER_OF_SAMPLES = 15;
+    private const int RVO_WEIGHT = 10;
 
     public KeyCode stopKey = KeyCode.S;
     public KeyCode priorityKey = KeyCode.P;
@@ -109,7 +109,13 @@ public class MainCharacterController : MonoBehaviour {
             DebugColor = Color.yellow
         };
 
-        this.rvoMovement = new RVOMovement(this.patrolMovement, characters.Select(c => c.KinematicData).ToList(), obstacles.Select(o => new StaticData(o.transform)).ToList(), this.character.KinematicData)
+        List<KinematicData> chars = characters.Select(c => c.KinematicData).ToList();
+        List<GameObject> obs = obstacles.ToList();
+        List<KinematicData> obst = new List<KinematicData>();
+        foreach (GameObject ob in obs) {
+            obst.Add(new KinematicData(new StaticData(ob.transform)));
+        }
+        this.rvoMovement = new RVOMovement(this.patrolMovement, chars, obst, this.character.KinematicData)
         {
             //Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
