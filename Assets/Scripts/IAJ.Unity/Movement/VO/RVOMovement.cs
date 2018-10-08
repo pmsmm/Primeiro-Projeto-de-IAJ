@@ -64,6 +64,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             {
                 float distancePenalty = (desiredVelocity - sample).magnitude;
                 Vector3 sample_charVel = 2 * sample - charVel;
+                maximumTimePenalty = 0f;
 
                 for (int i = 0; i < CharacterCount; i++)
                 {
