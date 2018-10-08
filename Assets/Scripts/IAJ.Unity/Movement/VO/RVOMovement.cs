@@ -23,7 +23,8 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
         public float CharacterSize { get; set; }
         public float IgnoreDistance { get; set; }
         public float MaxSpeed { get; set; }
-        private const float TOLERANCE = 0.001f;
+        private const float TTC_TOLERANCE = 0.001f;
+        private const float OUTPUT_TOLERANCE = 0.01f;
         public int NumberOfSamples { get; set; }
         public int Weight { get; set; }
         private int ObsStart { get; set; }
@@ -75,9 +76,9 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                     if ((bPos - charPos).magnitude > IgnoreDistance)
                         continue;
 
-                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(charPos, sample_charVel - b.velocity, bPos, CharacterSize * (isObstacle ? 1.5f : 1f));
+                    float TimeToCollision = MathHelper.TimeToCollisionBetweenRayAndCircle(charPos, sample_charVel - (isObstacle ? charVel.normalized : b.velocity), bPos, CharacterSize * (isObstacle ? 1.5f : 1f));
 
-                    if (TimeToCollision > TOLERANCE)
+                    if (TimeToCollision > TTC_TOLERANCE)
                         timePenalty = (Weight * (isObstacle ? 3f : 1f)) / TimeToCollision;
                     else if (TimeToCollision >= 0f)
                         timePenalty = Mathf.Infinity;
@@ -106,7 +107,7 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             MovementOutput desiredOutput = DesiredMovement.GetMovement();
             Vector3 desiredVelocity = Character.velocity + desiredOutput.linear;
 
-            if (desiredVelocity.magnitude <= TOLERANCE)
+            if (desiredVelocity.magnitude <= OUTPUT_TOLERANCE)
             {
                 if (!isStopped)
                 {

@@ -12,7 +12,7 @@ public class MainCharacterController : MonoBehaviour {
 
     public const float X_WORLD_SIZE = 55;
     public const float Z_WORLD_SIZE = 32.5f;
-    private const float MAX_ACCELERATION = 25.0f;
+    private const float MAX_ACCELERATION = 20f;
     private const float MAX_SPEED = 15.0f;
     private const float DRAG = 0.1f;
     private const float TIME_TO_TARGET = 2.0f;
