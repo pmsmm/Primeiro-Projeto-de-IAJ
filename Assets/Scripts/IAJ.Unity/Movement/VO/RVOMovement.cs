@@ -19,15 +19,15 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
         protected List<KinematicData> Characters { get; set; }
         protected List<KinematicData> Obstacles { get; set; }
+        protected List<Vector3> samples { get; set; }
         public float CharacterSize { get; set; }
         public float IgnoreDistance { get; set; }
         public float MaxSpeed { get; set; }
+        private const float TOLERANCE = 0.001f;
         public int NumberOfSamples { get; set; }
         public int Weight { get; set; }
-        private bool isStopped { get; set; }
         private int ObsStart { get; set; }
-        protected List<Vector3> samples { get; set; }
-        private const float TOLERANCE = 0.001f;
+        private bool isStopped { get; set; }
         //create additional properties if necessary
 
         protected DynamicMovement.DynamicMovement DesiredMovement { get; set; }
@@ -52,11 +52,10 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
         private Vector3 getBestSample(Vector3 desiredVelocity, List<Vector3> samples)
         {
-            //Best sample should be zero if every sample sucks
             Vector3 bestSample = Vector3.zero;
-            float minimumPenalty = Mathf.Infinity;
             Vector3 charPos = Character.Position;
             Vector3 charVel = Character.velocity;
+            float minimumPenalty = Mathf.Infinity;
             float maximumTimePenalty = 0f;
             float timePenalty = 0f;
             int CharacterCount = Characters.Count;
@@ -64,7 +63,6 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
             foreach (Vector3 sample in samples)
             {
                 float distancePenalty = (desiredVelocity - sample).magnitude;
-                maximumTimePenalty = 0f;
                 Vector3 sample_charVel = 2 * sample - charVel;
 
                 for (int i = 0; i < CharacterCount; i++)
@@ -104,7 +102,6 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
         public override MovementOutput GetMovement()
         {
-            //Shoudl start by converting the deridedOutput to velocity if it's acceleration
             MovementOutput desiredOutput = DesiredMovement.GetMovement();
             Vector3 desiredVelocity = Character.velocity + desiredOutput.linear;
 
@@ -122,7 +119,6 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
                 isStopped = false;
             }
 
-            //Trim the velocity if the desired one is bigger than the established max velocity
             if(desiredVelocity.magnitude > MaxSpeed)
             {
                 desiredVelocity = desiredVelocity.normalized;
@@ -139,7 +135,6 @@ namespace Assets.Scripts.IAJ.Unity.Movement.VO
 
             Vector3 bestSample = getBestSample(desiredVelocity, samples);
             base.Target.velocity = bestSample != Vector3.zero ? bestSample : desiredOutput.linear;
-            Debug.DrawLine(Character.Position, Character.Position + base.Target.velocity, Color.red);
 
             return base.GetMovement();
         }

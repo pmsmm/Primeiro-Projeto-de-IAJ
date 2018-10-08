@@ -96,7 +96,6 @@ public class MainCharacterController : MonoBehaviour {
             }
         }
 
-        //var targetPosition = this.character.KinematicData.Position + (Vector3.zero - this.character.KinematicData.Position) * 2;
         var targetPosition = -this.character.KinematicData.Position;
 
         this.patrolMovement = new DynamicPatrol(this.character.KinematicData.Position, targetPosition)
@@ -112,9 +111,9 @@ public class MainCharacterController : MonoBehaviour {
         List<GameObject> obs = obstacles.ToList();
         List<KinematicData> obst = new List<KinematicData>();
         obst.AddRange(obs.Select(c => new KinematicData(new StaticData(c.transform))).ToList());
+
         this.rvoMovement = new RVOMovement(this.patrolMovement, characters.Select(c => c.KinematicData).ToList(), obst, this.character.KinematicData)
         {
-            //Character = this.character.KinematicData,
             MaxAcceleration = MAX_ACCELERATION,
             MaxSpeed = MAX_SPEED,
             CharacterSize = CHARACTER_SIZE,

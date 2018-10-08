@@ -26,7 +26,9 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
         public override MovementOutput GetMovement()
         {
             Vector3 dir = Character.velocity.normalized;
+
             if (dir.magnitude <= 0.01f) return new MovementOutput();
+
             RaycastHit Hit;
             Ray ray1 = new Ray(Character.Position, dir);
             if (Obstacle.GetComponent<Collider>().Raycast(ray1, out Hit, LookAhead))
@@ -34,7 +36,6 @@ namespace Assets.Scripts.IAJ.Unity.Movement.DynamicMovement
                 base.Target.Position = Hit.point + Hit.normal * AvoidDistance;
                 return base.GetMovement();
             }
-
             else
             {
                 return new MovementOutput();
